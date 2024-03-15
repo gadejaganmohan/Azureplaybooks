@@ -1,0 +1,151 @@
+ 
+## ULTIMATE GUIDE ##
+
+installation of azure && ansible on linux 
+----------------------------------------------------
+
+Video                   : https://youtu.be/aSzWumc03CA?si=FVqlaE0UkrxHc6ph
+
+Install Az-CLI          : https://www.coachdevops.com/2023/08/install-azure-cli-in-red-hat-linux-how.html
+Connect ansible & azure : https://www.coachdevops.com/2023/08/install-ansible-on-red-hat-linux-how-to.html
+sir reference link : https://learn.microsoft.com/en-us/azure/developer/ansible/install-on-linux-vm?tabs=azure-cli
+-------------------------------------------------------------------
+
+---------------------vagrantfile------------------------------
+
+ Vagrant.configure("2") do |config|
+  config.vm.box = "boxomatic/centos-stream-9"
+  config.disksize.size = '40GB'
+  config.vm.provider "virtualbox" do |vb|
+    vb.memory = "6024" # 6GB RAM
+    vb.cpus = 4 # 4 CPUs
+  end 
+  config.vm.network "public_network", bridge: "RZ608 Wi-Fi 6E 80MHz", promiscuous_mode: "allow-all"
+end
+
+---------------------------------------------------------------
+
+==================Install GIT====================
+
+sudo yum install git -y
+----------------------------------------------------------------
+# Update all packages that have available updates.
+sudo yum update -y
+
+# Install Python 3 and pip.
+sudo yum install -y python3-pip
+
+# Upgrade pip3.
+- sudo pip3 install --upgrade pip
+
+-------------Install Ansible------------------
+
+- pip3 install "ansible==8.7.0"
+# check version of ansible.
+- ansible --version    ##(core-version = 2.15 should popup)
+
+------------Install az cli----------------------
+
+# install azure cli microsoft packages. (centos9)
+- sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
+- sudo dnf install -y https://packages.microsoft.com/config/rhel/9/packages-microsoft-prod.rpm
+- sudo dnf install azure-cli -y
+- az --version   ## check version  (core =2.57)
+- azure login  ## login to azure
+
+# Create an Azure Service Principal
+- az ad sp create-for-rbac --name <service-principal-name> --role Contributor --scopes subscriptions/<subscription_id>
+
+# go to vi editor using below cmd.
+- vi ~/.azure/credentials  
+
+# Insert the below script in .credential file.
+- [default]
+  subscription_id=<subscription_id>
+  client_id=<service_principal_app_id>
+  secret=<service_principal_password>
+  tenant=<service_principal_tenant_id>
+
+# Install Ansible az collection for interacting with Azure.
+- ansible-galaxy collection install azure.azcollection --force
+  
+# Install Ansible modules for Azure
+- sudo pip3 install -r ~/.ansible/collections/ansible_collections/azure/azcollection/requirements-azure.txt
+
+# Run the following ad-hoc Ansible command to create a resource group:
+- ansible localhost -m azure_rm_resourcegroup -a "name=my-rg123 location=eastus"
+
+# Run az group delete to delete the resource group.
+- az group delete --name <resource_group>
+
+# Verify that the resource group was deleted by using az group show.
+- az group show --name <resource_group>
+
+# follow the reference guide if required : 
+  https://learn.microsoft.com/en-us/azure/developer/ansible/install-on-linux-vm?tabs=azure-cli  
+---------------------------------------------------------------
+
+---------------------Install terraform------------------------------
+ sudo yum install -y yum-utils
+sudo yum-config-manager --add-repo https://rpm.releases.hashicorp.com/RHEL/hashicorp.repo
+sudo yum -y install terraform
+
+====================Install jenkins=========================
+
+sudo wget -O /etc/yum.repos.d/jenkins.repo \
+    https://pkg.jenkins.io/redhat-stable/jenkins.repo
+sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
+sudo yum upgrade
+# Add required dependencies for the jenkins package
+sudo yum install fontconfig java-17-openjdk -y
+sudo yum install jenkins -y
+sudo systemctl daemon-reload
+
+* sudo systemctl enable jenkins
+* sudo systemctl start jenkins
+* ip a - to check ips
+* connect ip:8080
+
+=================Install jdk8 and switch java version==========
+
+#some apps need jdk 8 to get build so install and switch jdks
+sudo yum install java-1.8.0-openjdk-devel
+
+sudo alternatives --config java	
+* jenkins runs only on above jdk11
+
+=================Install Docker=======================
+
+sudo yum install -y yum-utils
+sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo -y
+sudo yum install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y
+sudo systemctl enable docker
+sudo systemctl start docker
+sudo docker run hello-world
+
+*If prompted to accept the GPG key, verify that the fingerprint matches 060A 61C5 1B55 8A7F 742B 77AA C52F EB6B 621E 9F35, and if so, accept it.
+
+//////////jenkins access to connect docker//////////
+sudo usermod -aG docker jenkins
+sudo systemctl restart jenkins
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
